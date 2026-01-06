@@ -1,64 +1,31 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '@/contexts/ProjectContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateProgress, getDaysRemaining } from '@/utils/helpers';
-import { ROUTES, HERO_BACKGROUND_IMAGE } from '@/utils/constants';
+import { ROUTES } from '@/utils/constants';
 import { MOCK_PROJECTS } from '@/utils/mockData';
 import ExploreHeader from '@/components/layout/ExploreHeader';
 import ExploreFooter from '@/components/layout/ExploreFooter';
-import ExploreProjectsCard from '@/components/ui/ExploreProjectsCard';
-import Input from '@/components/common/Input';
+import ProjectCard from '@/components/ui/ProjectCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { TransformedProject } from '@/types';
+
+// Figma assets
+const heroImage = 'https://www.figma.com/api/mcp/asset/eabdab58-ae06-462d-8123-085c7dffe3b5';
 
 export default function ProjectsPage() {
   const router = useRouter();
   const { projects, loading, fetchProjects } = useProjects();
   const { user, isAuthenticated } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProjects, setFilteredProjects] = useState<TransformedProject[]>([]);
 
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
-  useEffect(() => {
-    // Use mock data if no projects from backend, otherwise use backend data
-    const projectsToUse = projects.length > 0 ? projects : MOCK_PROJECTS;
-    
-    let filtered = [...projectsToUse];
-    
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (project) =>
-          project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          project.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Transform projects
-    const transformed: TransformedProject[] = filtered.map((project) => ({
-      id: project.id || project._id || '',
-      image: project.image,
-      name: project.name,
-      description: project.description,
-      category: project.category,
-      raisedAmount: project.raisedAmount || project.raised || 0,
-      targetAmount: project.targetAmount || project.target || 0,
-      progressPercentage: calculateProgress(
-        project.raisedAmount || project.raised || 0,
-        project.targetAmount || project.target || 0
-      ),
-      daysLeft: getDaysRemaining(
-        project.activePeriod?.end || project.endDate
-      ),
-    }));
-
-    setFilteredProjects(transformed);
-  }, [searchTerm, projects]);
+  // Use mock data if backend doesn't return projects
+  const projectsToDisplay = projects.length > 0 ? projects : MOCK_PROJECTS;
 
   // Header configuration
   const headerProps = {
@@ -84,13 +51,14 @@ export default function ProjectsPage() {
     },
     user,
     isAuthenticated,
+    showCreateProject: true,
   };
 
   // Footer configuration
   const footerProps = {
     companyInfo: {
       companyName: 'Fundwise OU',
-      registrationNumber: 'Reg nr 10670440',
+      registrationNumber: 'Reg nr 12678440',
       address: 'Address: Rävala pst 8',
       city: 'Tallinn 10143',
       country: 'Estonia',
@@ -106,69 +74,80 @@ export default function ProjectsPage() {
       { path: '/privacy', label: 'Privacy Statement' },
       { path: '/risk-warning', label: 'Risk Warning' },
     ],
-    partners: ['Swedbank', 'Deloitte', 'NIORD', 'EstBAN', 'FinanceEstonia'],
+    partners: ['Swedbank', 'Deloitte', 'NJORD', 'EstBAN', 'FinanceEstonia'],
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Hero Section with Navbar overlaid on image */}
-      <div
-        className="relative min-h-[400px] bg-cover bg-center"
+    <div className="relative bg-white w-full min-h-screen">
+      {/* Hero Section with Background Image */}
+      <div 
+        className="relative h-[430px] overflow-hidden"
         style={{
-          backgroundImage: `url(${HERO_BACKGROUND_IMAGE})`,
+          backgroundImage: `url(${heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderBottomLeftRadius: '40px',
+          borderBottomRightRadius: '40px',
         }}
       >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-30 z-0" />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-[rgba(31,30,32,0.5)] rounded-bl-[40px] rounded-br-[40px]" />
         
-        {/* Navbar - absolutely positioned overlaid on image */}
-        <ExploreHeader {...headerProps} />
+        {/* Navigation */}
+        <ExploreHeader {...headerProps} isTransparent={true} />
         
         {/* Hero Title */}
-        <div className="relative z-10 container mx-auto px-4 pt-32 pb-20 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-            EXPLORE PROJECTS
+        <div className="relative z-10 flex flex-col items-center justify-center text-center" style={{ paddingTop: '150px' }}>
+          <h1 
+            className="text-white font-bold uppercase"
+            style={{
+              fontSize: '80px',
+              lineHeight: '80px',
+              letterSpacing: '-1.28px',
+            }}
+          >
+            Explore<br />PROJECTS
           </h1>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 bg-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <div className="max-w-md">
-              <Input
-                placeholder="Search for campaign..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white border border-gray-300"
-              />
+      {/* Projects Grid Section */}
+      <div className="py-20 bg-white">
+        <div className="max-w-[1440px] mx-auto px-16">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner size="lg" />
             </div>
-          </div>
-
-          {filteredProjects.length === 0 ? (
+          ) : projectsToDisplay.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
-                {searchTerm ? 'No projects found matching your search.' : 'No projects available.'}
-              </p>
+              <p className="text-gray-500 text-lg">No projects available.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <ExploreProjectsCard
-                  key={project.id}
-                  project={project}
-                  onCardClick={(id) => router.push(ROUTES.PROJECT_DETAIL(id))}
-                />
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+              {projectsToDisplay.map((project) => {
+                const projectId = project.id || project._id || '';
+                const progress = calculateProgress(
+                  project.raisedAmount || project.raised || 0,
+                  project.targetAmount || project.target || 0
+                );
+                const daysLeft = getDaysRemaining(
+                  project.activePeriod?.end || project.endDate
+                );
+
+                return (
+                  <ProjectCard
+                    key={projectId}
+                    id={projectId}
+                    image={project.image || 'https://via.placeholder.com/392x276'}
+                    title={project.name || 'Project Title'}
+                    description={project.description || 'Plastic pollution is now omnipresent in the ocean, but causes the most harm in coastal waters and during its journey towards the open ocean.'}
+                    category={project.category || 'Environmental'}
+                    raisedAmount={project.raisedAmount || project.raised || 101189}
+                    progressPercentage={progress}
+                    daysLeft={daysLeft}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

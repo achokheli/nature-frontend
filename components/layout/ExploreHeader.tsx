@@ -5,14 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HeaderProps } from '@/types';
 
-/**
- * Header Component for Explore Projects Page (Component 3.1.1)
- * Matches the design specification - navbar overlaid on image
- * All navigation handlers and user data are passed via props
- */
-const ExploreHeader: React.FC<HeaderProps> = ({
+
+const ExploreHeader: React.FC<HeaderProps & { isTransparent?: boolean; showCreateProject?: boolean }> = ({
   logoUrl,
-  logoAlt = 'Earth Restore Network',
+  logoAlt = 'ImpactInvest',
   navigationLinks = [],
   activeLinkPath,
   onCreateProjectClick,
@@ -20,6 +16,8 @@ const ExploreHeader: React.FC<HeaderProps> = ({
   user,
   isAuthenticated = false,
   className = '',
+  isTransparent = false,
+  showCreateProject = false,
 }) => {
   const pathname = usePathname();
   
@@ -32,61 +30,29 @@ const ExploreHeader: React.FC<HeaderProps> = ({
   const activePath = getActivePath();
 
   return (
-    <header className={`absolute top-0 left-0 right-0 z-20 bg-transparent ${className}`}>
-      <div className="container mx-auto px-4 py-4">
+    <header className={`absolute top-0 left-0 right-0 z-20 ${isTransparent ? 'bg-transparent' : ''} ${className}`}>
+      <div className="max-w-[1440px] mx-auto px-16 py-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center">
             {logoUrl ? (
-              <img src={logoUrl} alt={logoAlt} className="h-8" />
+              <img src={logoUrl} alt={logoAlt} className="h-24 w-24" />
             ) : (
-              <div className="flex items-center space-x-2">
-                {/* Globe icon with hands cradling it */}
-                <div className="relative w-8 h-8">
-                  {/* Globe circle */}
-                  <div className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center relative overflow-visible">
-                    {/* Globe grid lines */}
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      {/* Vertical lines */}
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M12 2v20M2 12h20"
-                      />
-                      {/* Horizontal curve */}
-                      <ellipse
-                        cx="12"
-                        cy="12"
-                        rx="10"
-                        ry="5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1}
-                      />
-                    </svg>
-                  </div>
-                  {/* Hands cradling - left hand */}
-                  <div className="absolute -left-1 bottom-0 w-3 h-4 border-l-2 border-white rounded-l-full opacity-70"></div>
-                  {/* Hands cradling - right hand */}
-                  <div className="absolute -right-1 bottom-0 w-3 h-4 border-r-2 border-white rounded-r-full opacity-70"></div>
-                </div>
-                {/* Logo text - two lines */}
-                <div className="flex flex-col leading-tight">
-                  <span className="text-white text-xs font-medium uppercase tracking-wide">EARTH RESTORE</span>
-                  <span className="text-white text-xs font-medium uppercase tracking-wide">NETWORK</span>
+              <div className="text-white">
+                <div className="flex flex-col items-center">
+                  <svg className="w-16 h-16" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="2"/>
+                    <path d="M30 70 Q40 60 50 70 Q60 80 70 70" stroke="white" strokeWidth="2" fill="none"/>
+                  </svg>
+                  <span className="text-xs font-medium uppercase tracking-wide mt-1">IMPACTINVEST</span>
+                  <span className="text-[10px] uppercase tracking-wide">Team</span>
                 </div>
               </div>
             )}
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-2">
+          {/* Navigation Links - Centered */}
+          <nav className="hidden md:flex items-center justify-center flex-1 space-x-8">
             {navigationLinks.map((link) => {
               const isActive = activePath === link.path || 
                 (link.path !== '/' && activePath.startsWith(link.path));
@@ -95,11 +61,13 @@ const ExploreHeader: React.FC<HeaderProps> = ({
                 <Link
                   key={link.path}
                   href={link.path}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-gray-300 bg-opacity-30 text-white'
-                      : 'text-white hover:text-gray-200'
+                  className={`text-white hover:text-gray-200 transition-colors ${
+                    isActive && showCreateProject ? 'bg-white/20 px-4 py-2 rounded-full' : ''
                   }`}
+                  style={{
+                    fontSize: '16px',
+                    lineHeight: '20px',
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -109,14 +77,34 @@ const ExploreHeader: React.FC<HeaderProps> = ({
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Create Project Button */}
-            {onCreateProjectClick && (
+            {/* Button - Blue for Projects or Orange for Create Project */}
+            {showCreateProject ? (
               <button
                 onClick={onCreateProjectClick}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                className="bg-[#ffa300] hover:bg-[#e69400] text-white transition-colors"
+                style={{
+                  padding: '14px 30px',
+                  borderRadius: '32px',
+                  fontSize: '16px',
+                  lineHeight: '20px',
+                }}
               >
                 Create a project
               </button>
+            ) : (
+              <Link href="/projects">
+                <button
+                  className="bg-[#0088FF] hover:bg-[#0077EE] text-white transition-colors"
+                  style={{
+                    padding: '14px 40px',
+                    borderRadius: '32px',
+                    fontSize: '16px',
+                    lineHeight: '20px',
+                  }}
+                >
+                  Projects
+                </button>
+              </Link>
             )}
 
             {/* User Icon */}
@@ -127,7 +115,7 @@ const ExploreHeader: React.FC<HeaderProps> = ({
                 aria-label="User menu"
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-12 h-12"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
