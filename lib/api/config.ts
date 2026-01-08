@@ -4,6 +4,7 @@
  */
 
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 import { API_BASE_URL } from '@/utils/constants';
 
 const api = axios.create({
@@ -13,13 +14,13 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token from NextAuth session
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const session = await getSession();
+      if (session?.accessToken && config.headers) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`;
       }
     }
     return config;
@@ -35,9 +36,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       // Clear auth data and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      window.location.href = '/auth';
     }
     return Promise.reject(error);
   }

@@ -1,61 +1,41 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi } from '@/lib/api/auth';
-import { User, AuthContextType, LoginCredentials, SignupData } from '@/types';
+import React, { createContext, useContext } from 'react';
+import { useSession } from 'next-auth/react';
+import { User, AuthContextType } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const loading = status === 'loading';
 
-  useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-    }
-    
-    setLoading(false);
-  }, []);
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        role: session.user.role as 'user' | 'admin',
+      }
+    : null;
 
-  const login = useCallback(async (email: string, password: string) => {
-    try {
-      const { user, token } = await authApi.login({ email, password });
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  }, []);
+  const login = async (email: string, password: string) => {
+    console.warn('Use signIn from next-auth/react instead of this method');
+    throw new Error('Use signIn from next-auth/react');
+  };
 
-  const signup = useCallback(async (name: string, email: string, password: string) => {
-    try {
-      const { user, token } = await authApi.signup({ name, email, password });
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-    } catch (error) {
-      console.error('Signup error:', error);
-      throw error;
-    }
-  }, []);
+  const signup = async (name: string, email: string, password: string) => {
+    console.warn('Signup should be handled separately, then use signIn');
+    throw new Error('Signup should be handled separately');
+  };
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    authApi.logout().catch(console.error);
-  }, []);
+  const logout = () => {
+    console.warn('Use signOut from next-auth/react instead of this method');
+  };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!session,
     isAdmin: user?.role === 'admin',
     loading,
     login,
