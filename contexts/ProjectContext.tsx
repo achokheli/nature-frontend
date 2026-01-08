@@ -16,8 +16,9 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       setError(null);
-      const data = await projectsApi.getAll();
-      setProjects(data);
+      // TODO: Temporary we do not need this.
+      // const data = await projectsApi.getAll();
+      // setProjects(data);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch projects');
       console.error('Fetch projects error:', err);
